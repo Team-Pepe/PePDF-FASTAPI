@@ -1,13 +1,36 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.config import settings
+from app.module.auth import router as auth_router
 
-app = FastAPI()
+app = FastAPI(
+    title=settings.api_title,
+    version=settings.api_version,
+)
+
+# Configure CORS BEFORE other middleware
+cors_origins = settings.get_cors_origins()
+if not cors_origins:
+    cors_origins = ["http://localhost:3000", "http://localhost:5173"]  # Fallback for dev
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=settings.cors_allow_credentials,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
+    max_age=600,
+)
+
+# Include routers
+app.include_router(auth_router)
 
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"message": "PePDF API", "version": settings.api_version}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
