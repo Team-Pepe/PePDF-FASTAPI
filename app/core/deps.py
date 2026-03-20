@@ -1,14 +1,11 @@
-from typing import Annotated, Dict, Any
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from typing import Annotated, Dict, Any, Optional
+from fastapi import Depends, HTTPException, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError
 from app.core.database import get_db as _get_db
 from app.core.security import decode_token
 from app.models import User
 from sqlalchemy import select
-
-security = HTTPBearer()
 
 
 async def get_db() -> AsyncSession:
@@ -18,14 +15,14 @@ async def get_db() -> AsyncSession:
 
 
 async def get_current_user(
-    credentials: Annotated[HTTPAuthCredentials, Depends(security)],
+    authorization: Annotated[str, Header()],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> Dict[str, Any]:
     """
     Get current authenticated user from JWT token.
     
     Args:
-        credentials: HTTP Bearer credentials (JWT token)
+        authorization: Authorization header with Bearer token
         db: Database session
     
     Returns:
@@ -34,7 +31,15 @@ async def get_current_user(
     Raises:
         HTTPException: If token is invalid or user not found
     """
-    token = credentials.credentials
+    # Extract token from "Bearer <token>"
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    token = authorization[7:]  # Remove "Bearer " prefix
     
     try:
         payload = decode_token(token)
@@ -72,20 +77,20 @@ async def get_current_user(
 
 
 async def get_optional_user(
-    credentials: Annotated[HTTPAuthCredentials | None, Depends(security)] = None,
+    authorization: Annotated[Optional[str], Header()] = None,
     db: Annotated[AsyncSession, Depends(get_db)] = None,
 ) -> Dict[str, Any] | None:
     """
     Get current user if authenticated, otherwise None.
     
     Args:
-        credentials: Optional HTTP Bearer credentials
+        authorization: Optional Authorization header with Bearer token
         db: Database session
     
     Returns:
         User information dictionary or None
     """
-    if credentials is None:
+    if authorization is None:
         return None
     
-    return await get_current_user(credentials, db)
+    return await get_current_user(authorization, db)
