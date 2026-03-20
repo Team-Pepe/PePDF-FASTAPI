@@ -18,6 +18,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 # Copy only the application source code.
 COPY app ./app
+COPY scripts ./scripts
 
 # Install the local project into the same environment.
 RUN uv sync --frozen --no-dev

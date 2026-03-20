@@ -10,8 +10,6 @@ app = FastAPI(
 
 # Configure CORS BEFORE other middleware
 cors_origins = settings.get_cors_origins()
-if not cors_origins:
-    cors_origins = ["http://localhost:3000", "http://localhost:5173"]  # Fallback for dev
 
 app.add_middleware(
     CORSMiddleware,
