@@ -1,5 +1,5 @@
 from typing import Annotated, Dict, Any, Optional
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import Depends, HTTPException, status, Header, Cookie
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError
 from app.core.database import get_db as _get_db
@@ -15,14 +15,17 @@ async def get_db() -> AsyncSession:
 
 
 async def get_current_user(
-    authorization: Annotated[str, Header()],
-    db: Annotated[AsyncSession, Depends(get_db)],
+    access_token: Annotated[Optional[str], Cookie()] = None,
+    authorization: Annotated[Optional[str], Header()] = None,
+    db: Annotated[AsyncSession, Depends(get_db)] = Depends(get_db),
 ) -> Dict[str, Any]:
     """
     Get current authenticated user from JWT token.
+    Tries to extract token from cookies first, then from Authorization header.
     
     Args:
-        authorization: Authorization header with Bearer token
+        access_token: JWT from HttpOnly cookie
+        authorization: Authorization header with Bearer token (fallback)
         db: Database session
     
     Returns:
@@ -31,15 +34,20 @@ async def get_current_user(
     Raises:
         HTTPException: If token is invalid or user not found
     """
-    # Extract token from "Bearer <token>"
-    if not authorization.startswith("Bearer "):
+    # Try to get token from cookie first
+    token = access_token
+    
+    # Fallback: try to extract from Authorization header
+    if not token and authorization:
+        if authorization.startswith("Bearer "):
+            token = authorization[7:]
+    
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
+            detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    token = authorization[7:]  # Remove "Bearer " prefix
     
     try:
         payload = decode_token(token)

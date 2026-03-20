@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
-from typing import Optional
+from typing import Optional, List
 
 
 class Settings(BaseSettings):
@@ -18,6 +18,17 @@ class Settings(BaseSettings):
     # API
     api_title: str = "PePDF API"
     api_version: str = "0.1.0"
+
+    # CORS - Load all values from .env
+    frontend_url: str  # FRONTEND_URL from .env (required)
+    cors_allow_credentials: bool = True  # CORS_ALLOW_CREDENTIALS from .env
+    cors_allow_origins_str: str = ""  # CORS_ALLOW_ORIGINS from .env (comma-separated)
+
+    def get_cors_origins(self) -> List[str]:
+        """Parse CORS origins from comma-separated string in .env"""
+        if not self.cors_allow_origins_str:
+            return []
+        return [origin.strip() for origin in self.cors_allow_origins_str.split(",") if origin.strip()]
 
     @field_validator("access_token_expire_days", mode="before")
     @classmethod
