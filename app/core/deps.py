@@ -15,9 +15,9 @@ async def get_db() -> AsyncSession:
 
 
 async def get_current_user(
+    db: Annotated[AsyncSession, Depends(get_db)],
     access_token: Annotated[Optional[str], Cookie()] = None,
     authorization: Annotated[Optional[str], Header()] = None,
-    db: Annotated[AsyncSession, Depends(get_db)] = Depends(get_db),
 ) -> Dict[str, Any]:
     """
     Get current authenticated user from JWT token.
@@ -85,8 +85,8 @@ async def get_current_user(
 
 
 async def get_optional_user(
+    db: Annotated[AsyncSession, Depends(get_db)],
     authorization: Annotated[Optional[str], Header()] = None,
-    db: Annotated[AsyncSession, Depends(get_db)] = None,
 ) -> Dict[str, Any] | None:
     """
     Get current user if authenticated, otherwise None.

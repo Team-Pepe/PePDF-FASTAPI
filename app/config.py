@@ -22,13 +22,13 @@ class Settings(BaseSettings):
     # CORS - Load all values from .env
     frontend_url: str  # FRONTEND_URL from .env (required)
     cors_allow_credentials: bool = True  # CORS_ALLOW_CREDENTIALS from .env
-    cors_allow_origins_str: str = ""  # CORS_ALLOW_ORIGINS from .env (comma-separated)
+    cors_allow_origins: str = ""  # CORS_ALLOW_ORIGINS from .env (comma-separated)
 
     def get_cors_origins(self) -> List[str]:
         """Parse CORS origins from comma-separated string in .env"""
-        if not self.cors_allow_origins_str:
+        if not self.cors_allow_origins:
             return []
-        return [origin.strip() for origin in self.cors_allow_origins_str.split(",") if origin.strip()]
+        return [origin.strip() for origin in self.cors_allow_origins.split(",") if origin.strip()]
 
     @field_validator("access_token_expire_days", mode="before")
     @classmethod
@@ -40,6 +40,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 
 settings = Settings()

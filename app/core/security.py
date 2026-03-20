@@ -126,7 +126,7 @@ def create_cookie_response(
         value=access_token,
         httponly=True,
         secure=secure,
-        samesite="lax",
+        samesite="none" if not secure else "lax",
         path="/",
     )
     
@@ -137,7 +137,7 @@ def create_cookie_response(
         value=refresh_token,
         httponly=True,
         secure=secure,
-        samesite="lax",
+        samesite="none" if not secure else "lax",
         path="/",
         expires=refresh_expires,
     )
