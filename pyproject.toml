@@ -16,4 +16,8 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "img2pdf>=0.6.3",
     "Pillow>=12.2.0",
+    "PyMuPDF>=1.23.0",
 ]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0.0"]
