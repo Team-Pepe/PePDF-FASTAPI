@@ -1,7 +1,18 @@
 import qrcode
-from PIL import Image, ImageDraw
+import logging
 import io
 from typing import Optional
+from PIL import Image, ImageDraw
+from pyzbar.pyzbar import decode
+
+logger = logging.getLogger(__name__)
+
+ERROR_MAPPING = {
+    "L": qrcode.constants.ERROR_CORRECT_L,
+    "M": qrcode.constants.ERROR_CORRECT_M,
+    "Q": qrcode.constants.ERROR_CORRECT_Q,
+    "H": qrcode.constants.ERROR_CORRECT_H,
+}
 
 
 def generate_basic_qr(data: str, size: int = 512) -> io.BytesIO:
@@ -32,18 +43,11 @@ def generate_advanced_qr(
     logo_bytes: Optional[bytes] = None,
 ) -> io.BytesIO:
 
-    error_mapping = {
-        "L": qrcode.constants.ERROR_CORRECT_L,
-        "M": qrcode.constants.ERROR_CORRECT_M,
-        "Q": qrcode.constants.ERROR_CORRECT_Q,
-        "H": qrcode.constants.ERROR_CORRECT_H,
-    }
-
     # 3. Lógica de Generación Estética
     qr = qrcode.QRCode(
         version=None,
-        error_correction=error_mapping.get(
-            error_correction[0], qrcode.constants.ERROR_CORRECT_H
+        error_correction=ERROR_MAPPING.get(
+            error_correction[:1].upper(), qrcode.constants.ERROR_CORRECT_H
         ),
         box_size=15,
         border=white_margin,
@@ -123,13 +127,11 @@ def generate_advanced_qr(
 
 def decode_qr(image_bytes: bytes) -> Optional[str]:
     try:
-        from pyzbar.pyzbar import decode
-
         img = Image.open(io.BytesIO(image_bytes))
         decoded_objects = decode(img)
         if decoded_objects:
             return decoded_objects[0].data.decode("utf-8")
         return None
     except Exception as e:
-        print(f"Error decoding QR: {e}")
+        logger.error(f"Error decoding QR: {e}", exc_info=True)
         return None

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse
-from typing import Optional
+from typing import Optional, Literal
 import io
 
 from .schemas import QrBasicRequest, QrScanResult
@@ -18,10 +18,10 @@ async def create_basic_qr(request: QrBasicRequest):
 @router.post("/advanced")
 async def create_advanced_qr(
     data: str = Form(...),
-    error_correction: str = Form("H"),
-    logo_shape: str = Form("circular"),
-    logo_size_percent: int = Form(30),
-    white_margin: int = Form(3),
+    error_correction: Literal["L", "M", "Q", "H"] = Form("H"),
+    logo_shape: Literal["circular", "rounded"] = Form("circular"),
+    logo_size_percent: int = Form(30, ge=1, le=40),
+    white_margin: int = Form(3, ge=0, le=10),
     logo: Optional[UploadFile] = File(None),
 ):
     logo_bytes = None
@@ -41,8 +41,14 @@ async def create_advanced_qr(
 
 @router.post("/scan", response_model=QrScanResult)
 async def scan_qr(file: UploadFile = File(...)):
-    if not file.filename:
-        raise HTTPException(status_code=400, detail="No file provided")
+    if (
+        not file.filename
+        or not file.content_type
+        or not file.content_type.startswith("image/")
+    ):
+        raise HTTPException(
+            status_code=400, detail="A valid image file must be provided"
+        )
 
     image_bytes = await file.read()
     decoded_value = services.decode_qr(image_bytes)
