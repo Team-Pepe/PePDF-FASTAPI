@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.module.auth import router as auth_router
+from app.module.convert_tools import router as convert_tools_router
 from app.module.tool_suites.qr_generator import router as qr_router
 from app.module.tool_suites.protect import router as protect_router
 
@@ -24,6 +25,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router)
+app.include_router(convert_tools_router)
 app.include_router(qr_router, prefix="/api")
 app.include_router(protect_router, prefix="/api")
 
