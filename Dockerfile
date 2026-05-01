@@ -28,9 +28,18 @@ FROM python:3.13-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
     PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libreoffice-core \
+        libreoffice-writer \
+        fonts-dejavu \
+        fonts-liberation \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the prepared environment and source code from builder.
 COPY --from=builder /app /app
