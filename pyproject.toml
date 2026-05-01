@@ -21,6 +21,7 @@ dependencies = [
     "qrcode>=8.2",
     "pillow>=12.2.0",
     "pyzbar>=0.1.9",
+    "pypdf2>=3.0.1",
 ]
 
 [project.optional-dependencies]
