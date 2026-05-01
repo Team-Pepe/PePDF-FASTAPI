@@ -17,6 +17,7 @@ dependencies = [
     "img2pdf>=0.6.3",
     "Pillow>=12.2.0",
     "PyMuPDF>=1.23.0",
+    "pdf2docx>=0.5.8",
 ]
 
 [project.optional-dependencies]
